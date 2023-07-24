@@ -29,7 +29,12 @@ sqlite3 ecommerce.db < create_database.sql
 
 ## Usage
 
-Run the bot
+1. Create a `.env` file in the root of the project and add the following variables
+```bash
+OPENAI_APIKEY=<your-openai-api-key>
+```
+
+2. Run the bot
 ```bash
 npm start # or node index.js
 ```
