@@ -91,7 +91,6 @@ async function handleConversation(customerId) {
   You are a helpful customer support agent for an ecommerce company. 
   You are helping a customer with their questions. 
   The customers ID in our database is ${customerId}.
-  Introduce yourself and ask how you can help the customer.
   Ask any clarifying questions if required.
   Set 'endConversation' to 'true' when the conversation is complete.
   Here is the conversation so far:

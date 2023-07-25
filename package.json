@@ -9,6 +9,6 @@
     "sqlite3": "^5.1.6"
   },
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./src/index.js"
   }
 }
