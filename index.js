@@ -1,12 +1,14 @@
-import { db, getOrderById, getOrdersByCustomerId, getProducts } from './db.js';
+import { db, getOrderById, getOrdersByCustomerId, getProducts, createNewOrder } from './db.js';
+import { askQuestion } from './utils.js';
 import 'dotenv/config'
+
+const debugStatus = process.argv[2] === 'debug' ? true : false;
 
 // Setup LLM client
 import { OpenAI, SPrompt, OpenAIGenerateModel, OpenAIDefaultOptions, Memory } from '@dosco/llm-client';
 const mem = new Memory();
 const conf = OpenAIDefaultOptions();
 conf.model = OpenAIGenerateModel.GPT35Turbo16K;
-console.log(conf);
 
 const ai = new OpenAI(process.env.OPENAI_APIKEY, conf);
 
@@ -17,6 +19,10 @@ const responseSchema = {
       type: 'string',
       description: 'response message for the sender',
     },
+    endConversation: {
+      type: 'boolean',
+      description: 'Indicates whether the conversation should end',
+    },    
   },
 };
 
@@ -45,64 +51,84 @@ const functions = [
     description: 'Get product details, price and available stock.',
     inputSchema: {
       type: 'string',
-      description: 'a search query term',
+      description: 'a query term',
     },
     func: getProducts,
-  }  
+  },
+  {
+    name: 'askQuestion',
+    description: 'Ask a question to the customer or clarify something.',
+    inputSchema: {
+      type: 'string',
+      description: 'The question to ask',
+    },
+    func: askQuestion,
+  },
+  {
+    name: 'createNewOrder',
+    description: 'Create a new order for a customer.',
+    inputSchema: {
+      type: 'object',
+      description: 'The order details',
+      properties: {
+        customerId: { type: 'number' },
+        productId: { type: 'number' },
+        quantity: { type: 'number' }
+      },
+      required: ['customerId', 'productId', 'quantity']
+    },
+    func: createNewOrder,
+  }
 ];
 
 const prompt = new SPrompt(responseSchema, functions);
-prompt.setDebug(false);
+prompt.setDebug(debugStatus);
 
 // Handle a conversation from a customer
-async function handleConversation(customerId, conversation) {
-  let conversationHistory = '';
+async function handleConversation(customerId) {
+  let aiMessage = '';
+  const promptText = `
+  You are a helpful customer support agent for an ecommerce company. 
+  You are helping a customer with their questions. 
+  The customers ID in our database is ${customerId}.
+  Introduce yourself and ask how you can help the customer.
+  Ask any clarifying questions if required.
+  Set 'endConversation' to 'true' when the conversation is complete.
+  Here is the conversation so far:
 
-  for (let i = 0; i < conversation.length; i++) {
-    const message = conversation[i];
-    conversationHistory += `\n${message.role}: ${message.content}`;
+  ${mem.history()}
+  `;
 
-    if (message.role === 'ai') {
-      const promptText = `
-      You are a helpful customer support agent for an ecommerce company. 
-      You are helping a customer with their questions. 
-      The customers ID in our database is ${customerId}.
-      Ask any clarifying questions if required.
-      Here is the conversation so far:
-
-      ${conversationHistory}
-      `;
-
-      // Use the LLM client to generate a response
-      const response = await prompt.generate(ai, promptText, { memory: mem });
-      const aiMessage = response.values[0].text;
-
-      // Add the AI's response to the conversation history
-      conversationHistory += `\nAI: ${JSON.parse(aiMessage).message}`;
-
-      // If the AI's response is a question, break the loop and return the conversation history
-      if (aiMessage.endsWith('?')) {
-        break;
-      }
-    }
+  // Use the LLM client to generate a response
+  try {
+    const response = await prompt.generate(ai, promptText, { memory: mem });
+    aiMessage = response.values[0].text;
+  } catch (err) {
+    console.log(err.message);
+    process.exit(1);
   }
-  return conversationHistory;
+  return aiMessage;
 }
 
-const main = async () => {
-  let customerId = 1;
-  let conversation = [
-    { role: 'user', content: 'What products do you have in stock?' },
-    { role: 'ai', content: '' }  // Placeholder for the AI's response
-  ];
-
-  let conversationHistory = await handleConversation(customerId, conversation);
-  return conversationHistory;
+//// Main function ////
+const main = async (customerId) => {
+  let aiMessage = await handleConversation(customerId);
+  let content = JSON.parse(aiMessage).message;
+  console.log(`AI: ${content}`)
+  // If the AI's response includes the endConversation property, end chat
+  if (aiMessage.endConversation) {
+    process.exit(0);
+  }
+  // Continue the conversation
+  main(customerId);
 }
 
 // once db loads, run main function
 db.on('open', () => {
-  main()
-    .then(response => console.log(response))
-    .catch(err => console.log(err));
+  let customerId = 1;
+
+  main(customerId)
+    .catch(err => {
+      console.log("An AI Error occured:", err.message)
+  });
 });
