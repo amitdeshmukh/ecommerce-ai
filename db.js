@@ -34,6 +34,7 @@ const productsSchema = {
     additionalProperties: false
   }
 };
+
 // Compile your schemas into validation functions
 const validateOrders = ajv.compile(ordersSchema);
 const validateProducts = ajv.compile(productsSchema);
@@ -88,18 +89,16 @@ async function getOrderById(orderId) {
   });
 }
 
-async function getProducts() {
+async function getProducts(query) {
   return new Promise((resolve, reject) => {
     const sql = 'SELECT * FROM Products';
-    db.all(sql, (err, rows) => {
+    db.all(sql, [], (err, rows) => {
       if (err) {
         reject(err);
       } else {
         // Validate the data
-        console.log('Data returned by SQL query:', rows);
         if (!validateProducts(rows)) {
           // If the data is invalid, reject the promise with the validation errors
-          console.log('Validation errors:', validateProducts.errors);
           reject(validateProducts.errors);
         } else {
           resolve(rows);

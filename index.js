@@ -43,12 +43,16 @@ const functions = [
   {
     name: 'getProducts',
     description: 'Get product details, price and available stock.',
+    inputSchema: {
+      type: 'string',
+      description: 'a search query term',
+    },
     func: getProducts,
   }  
 ];
 
 const prompt = new SPrompt(responseSchema, functions);
-prompt.setDebug(true);
+prompt.setDebug(false);
 
 // Handle a conversation from a customer
 async function handleConversation(customerId, conversation) {
@@ -74,7 +78,7 @@ async function handleConversation(customerId, conversation) {
       const aiMessage = response.values[0].text;
 
       // Add the AI's response to the conversation history
-      conversationHistory += `\nAI: ${aiMessage}`;
+      conversationHistory += `\nAI: ${JSON.parse(aiMessage).message}`;
 
       // If the AI's response is a question, break the loop and return the conversation history
       if (aiMessage.endsWith('?')) {
@@ -87,10 +91,8 @@ async function handleConversation(customerId, conversation) {
 
 const main = async () => {
   let customerId = 1;
-  // console.log(await getProducts());
-  // process.exit(0);
   let conversation = [
-    { role: 'user', content: 'What is the status of my recent order?' },
+    { role: 'user', content: 'What products do you have in stock?' },
     { role: 'ai', content: '' }  // Placeholder for the AI's response
   ];
 
