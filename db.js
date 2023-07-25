@@ -108,4 +108,23 @@ async function getProducts(query) {
   });
 }
 
-export { db, getOrdersByCustomerId, getOrderById, getProducts };
+async function createNewOrder({customerId, productId, quantity}) {
+  return new Promise((resolve, reject) => {
+    const sql = 'INSERT INTO Orders (customer_id, product_id, quantity, order_date, status) VALUES (?, ?, ?, ?, ?)';
+    db.run(sql, [customerId, productId, quantity, new Date().toISOString().slice(0,10), 'In Progress'], function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
+    });
+  });
+}
+
+export { 
+  db, 
+  getOrdersByCustomerId, 
+  getOrderById, 
+  getProducts,
+  createNewOrder
+};
