@@ -11,6 +11,7 @@ const ordersSchema = {
       customer_id: { type: "number" },
       product_id: { type: "number" },
       quantity: { type: "number" },
+      total: { type: "number" },
       order_date: { type: "string" },
       status: { type: "string" }
     },
@@ -108,10 +109,13 @@ async function getProducts(query) {
   });
 }
 
-async function createNewOrder({customerId, productId, quantity}) {
+async function createNewOrder({customerId, productId, quantity, unitPrice}) {
+  unitPrice = unitPrice || 0;
+  let total = quantity * unitPrice;
+
   return new Promise((resolve, reject) => {
-    const sql = 'INSERT INTO Orders (customer_id, product_id, quantity, order_date, status) VALUES (?, ?, ?, ?, ?)';
-    db.run(sql, [customerId, productId, quantity, new Date().toISOString().slice(0,10), 'In Progress'], function(err) {
+    const sql = 'INSERT INTO Orders (customer_id, product_id, quantity, total, order_date, status) VALUES (?, ?, ?, ?, ?, ?)';
+    db.run(sql, [customerId, productId, quantity, total, new Date().toISOString().slice(0,10), 'In Progress'], function(err) {
       if (err) {
         reject(err);
       } else {

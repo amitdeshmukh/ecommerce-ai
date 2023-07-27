@@ -36,6 +36,7 @@ CREATE TABLE Orders (
     customer_id INTEGER,
     product_id INTEGER,
     quantity INTEGER NOT NULL,
+    total REAL NOT NULL,
     order_date DATE NOT NULL,
     status TEXT,
     FOREIGN KEY (customer_id) REFERENCES Customers (customer_id),
