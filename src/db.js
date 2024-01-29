@@ -7,13 +7,34 @@ const ordersSchema = {
   items: {
     type: "object",
     properties: {
-      order_id: { type: "number" },
-      customer_id: { type: "number" },
-      product_id: { type: "number" },
-      quantity: { type: "number" },
-      total: { type: "number" },
-      order_date: { type: "string" },
-      status: { type: "string" }
+      order_id: { 
+        type: "integer",
+        description: "The Order ID value for the order in the database"
+      },
+      customer_id: {
+        type: "integer",
+        description: "The Customer ID value for the customer in the database"
+      },
+      product_id: {
+        type: "integer",
+        description: "The Product ID value of the product"
+      },
+      quantity: {
+        type: "integer",
+        description: "The quantity of the product requested in the order"
+      },
+      total: {
+        type: "number",
+        description: "The total amount payable by the customer towards the order"
+      },
+      order_date: {
+        type: "string",
+        description: "The date when the order was placed"
+      },
+      status: {
+        type: "string",
+        description: "The status of the order"
+      }
     },
     required: ["order_id", "customer_id", "product_id", "quantity", "order_date", "status"],
     additionalProperties: false

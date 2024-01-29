@@ -4,14 +4,14 @@ CREATE TABLE Products (
     product_name TEXT NOT NULL,
     product_description TEXT,
     price REAL NOT NULL,
-    stock INTEGER NOT NULL
+    stock INTEGER
 );
 
 -- Insert data into the Products table
 INSERT INTO Products (product_id, product_name, product_description, price, stock) VALUES
-(1, 'Apple iPhone 13', 'Latest Apple iPhone 13 with 128GB storage', 699.99, 100),
-(2, 'Samsung Galaxy S21', 'Samsung Galaxy S21 with 128GB storage', 799.99, 50),
-(3, 'Google Pixel 6', 'Google Pixel 6 with 128GB storage', 599.99, 75),
+(1, 'Apple iPhone 13', 'Latest Apple iPhone 13 with 128GB storage', 699.99, 0),
+(2, 'Samsung Galaxy S23', 'Samsung Galaxy S23 with 128GB storage', 799.99, 5),
+(3, 'Google Pixel 6', 'Google Pixel 6 with 128GB storage', 599.99, 1),
 (4, 'Apple MacBook Pro', 'Apple MacBook Pro with M1 chip', 1299.99, 80),
 (5, 'Dell XPS 15', 'Dell XPS 15 with Intel i7 processor', 1499.99, 70),
 (6, 'Sony WH-1000XM4', 'Sony WH-1000XM4 Wireless Noise-Cancelling Headphones', 349.99, 120);
