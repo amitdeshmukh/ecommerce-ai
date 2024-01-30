@@ -71,7 +71,7 @@ let db = new sqlite3.Database('./ecommerce.db', (err) => {
 });
 
 // Setup functions
-async function getOrdersByCustomerId(customerId) {
+async function getOrdersByCustomerId({customerId}) {
   return new Promise((resolve, reject) => {
     const sql = 'SELECT * FROM Orders WHERE customer_id = ?';
     db.all(sql, [customerId], (err, rows) => {
@@ -91,7 +91,7 @@ async function getOrdersByCustomerId(customerId) {
   });
 }
 
-async function getOrderById(orderId) {
+async function getOrderById({orderId}) {
   return new Promise((resolve, reject) => {
     const sql = 'SELECT * FROM Orders WHERE order_id = ?';
     db.all(sql, [orderId], (err, rows) => {

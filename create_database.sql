@@ -42,12 +42,3 @@ CREATE TABLE Orders (
     FOREIGN KEY (customer_id) REFERENCES Customers (customer_id),
     FOREIGN KEY (product_id) REFERENCES Products (product_id)
 );
-
--- Insert data into the Orders table
-INSERT INTO Orders (order_id, customer_id, product_id, quantity, order_date, status) VALUES
-(1, 1, 2, 1, '2023-07-19', 'Shipped'),
-(2, 2, 3, 2, '2023-07-20', 'Shipped'),
-(3, 1, 4, 1, '2023-07-21', 'Shipped'),
-(4, 1, 6, 2, '2023-07-22', 'In progress'),
-(5, 2, 5, 1, '2023-07-23', 'In progress'),
-(6, 2, 1, 1, '2023-07-24', 'Delivered');

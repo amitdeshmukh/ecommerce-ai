@@ -1,18 +1,17 @@
 import { db, getOrderById, getOrdersByCustomerId, getProducts, createNewOrder } from './db.js';
-import { askQuestion } from './utils.js';
+import { reply } from './utils.js';
 import 'dotenv/config'
 
 const debugStatus = process.argv[2] === 'debug' ? true : false;
 
 // Setup LLM client
-import { OpenAI, SPrompt, OpenAIGenerateModel, OpenAIDefaultOptions, Memory } from '@dosco/llm-client';
+import { OpenAI, SPrompt, OpenAIBestModelOptions, Memory } from 'llmclient';
 const mem = new Memory();
-const conf = OpenAIDefaultOptions();
-conf.model = OpenAIGenerateModel.GPT4;
+const conf = OpenAIBestModelOptions();
 
 const ai = new OpenAI(process.env.OPENAI_APIKEY, conf);
 
-const responseSchema = {
+const resultSchema = {
   type: 'object',
   properties: {
     message: {
@@ -32,8 +31,14 @@ const functions = [
     name: 'getOrdersByCustomerId',
     description: 'Get detailed information about orders placed by a customer based on their `customer_id`',
     inputSchema: {
-      type: 'integer',
-      description: 'The Customer ID value for the customer in the database',
+      type: 'object',
+      properties: {
+        customerId: {
+          type: 'integer',
+          description: 'The Customer ID value for the customer in the database',
+        },
+      },
+      required: ['customerId']
     },
     func: getOrdersByCustomerId,
   },
@@ -41,8 +46,14 @@ const functions = [
     name: 'getOrderById',
     description: 'Get detailed information about an Order by its order_id',
     inputSchema: {
-      type: 'integer',
-      description: 'The Order ID value for the order in the database',
+      type: 'object',
+      properties: {
+        orderId: {
+          type: 'integer',
+          description: 'The Order ID value for the order in the database'
+        }
+      },
+      required: ['orderId']
     },
     func: getOrderById,
   },
@@ -50,19 +61,31 @@ const functions = [
     name: 'getProducts',
     description: 'Get details about products, the available stock and the price of the product.',
     inputSchema: {
-      type: 'string',
-      description: 'a query term',
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'a query term',
+        },
+      },
+      required: ['query']
     },
     func: getProducts,
   },
   {
-    name: 'askQuestion',
-    description: 'Ask a question to the customer or clarify something.',
+    name: 'reply',
+    description: 'Respond to the customers query.',
     inputSchema: {
-      type: 'string',
-      description: 'The question to ask the customer',
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'The response to send to the customer',
+        },
+      },
+      required: ['message']
     },
-    func: askQuestion,
+    func: reply,
   },
   {
     name: 'createNewOrder',
@@ -94,40 +117,40 @@ const functions = [
   }
 ];
 
-const prompt = new SPrompt(responseSchema, functions);
+const prompt = new SPrompt(resultSchema, functions);
 prompt.setDebug(debugStatus);
 
 // Handle a conversation from a customer
 async function handleConversation(customerId) {
-  let aiMessage = '';
   const promptText = `
   You are a helpful customer support agent for an ecommerce company. 
-  You are helping a customer with their questions. 
+  You are helping a customer with their enquiry. 
   The customers ID in our database is ${customerId}.
-  Ask any clarifying questions if required.
 
-  IMPORTANT! Before placing an order for a product, please 
-    1. Check that the product is in stock. If it is not in stock, inform the customer.
-    2. Check the price of the product and inform the customer of the price.
-    3. Read back to the customer your understanding of their order, including
-      - the product and its description
+  Check that the product is in stock. If it is not in stock, inform the customer.
+
+  IMPORTANT instructions before placing an order!
+  1. Before placing an order for a product, please
+      - Check the price of the product and inform the customer of the price.
+      - Read back to the customer your understanding of their order, including the product and its description
       - the quantity that they wish to purchase
       - the total price of the order
-    4. Obtain consent from the customer that they want to go ahead and place the order.
+    
+  2. Obtain consent from the customer that they want to go ahead and place the order.
   
-  IMPORTANT! DO NOT place an order if the above steps are not completed.
-  Before closing the conversation, ask if there is anything else you can help with.
-  
-  Set 'endConversation' to 'true' when the conversation is complete.
+  3. DO NOT place an order if the above steps are not completed.
+
+
+  Before closing the conversation, ask if there is anything else you can help with. Set 'endConversation' to 'true' when the conversation is complete.
   Here is the conversation so far:
 
   Hello!
-  ${mem.history()}
+  ${mem.history('2736')}
   `;
 
   // Use the LLM client to generate a response
   try {
-    const response = await prompt.generate(ai, promptText, { memory: mem });
+    const response = await prompt.generate(ai, promptText, { memory: mem, sessionId: '2736' });
     let aiResponse = response.value();
     return aiResponse;
   } catch (err) {
